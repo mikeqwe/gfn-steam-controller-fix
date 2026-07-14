@@ -46,42 +46,48 @@ See [Technical notes](docs/technical-notes.md) for the evidence and data flow.
 - Steam running with the controller configured to expose a virtual gamepad;
 - Xcode Command Line Tools (`cc`, `lipo`, `nm`, `otool`, and `codesign`).
 
+The installer may request an administrator password because the patched app is
+placed in the system `/Applications` folder.
+
 macOS may ask for **Input Monitoring** when the haptic bridge first opens the
 physical Steam Controller. Grant access to the patched GFN copy and relaunch it.
 
-CMake, a kernel extension, a DriverKit driver, root access, and disabling SIP
-are not required.
+CMake, a kernel extension, a DriverKit driver, a root shell, and disabling SIP
+are not required. The installer does not add a privileged helper or background
+service.
 
 ## Quick start
 
 ```sh
-make check
-./build.zsh
-./verify.zsh
-open "$HOME/Applications/GeForceNOW-Steam-Controller.app"
+./install.zsh
+open "/Applications/GeForceNOW-Steam-Controller.app"
 ```
 
-The default output is installed in the current user's Applications folder:
+The installer builds and verifies the patched copy, then places it here:
 
 ```text
-~/Applications/GeForceNOW-Steam-Controller.app
+/Applications/GeForceNOW-Steam-Controller.app
 ```
 
-This is different from the system-wide `/Applications` folder shown by the
-standard Finder **Applications** sidebar item. Use Finder's **Go > Go to
-Folder…** (`Shift-Command-G`) and enter `~/Applications`, or add the patched app
-to the Dock after opening it once. The builder sets its Finder display name to
-`GeForceNOW-Steam-Controller` so it remains distinguishable from the official
-`NVIDIA GeForce NOW` app.
+It appears in Finder's standard **Applications** folder with the display name
+`GeForceNOW-Steam-Controller`, next to but distinct from the official
+`NVIDIA GeForce NOW` app. Open the patched app for Steam Controller sessions;
+keep the official app installed because it is the clean source for builds and
+updates.
 
-Custom source and output paths are positional arguments:
+For a low-level custom build, `build.zsh` accepts source and output paths as
+positional arguments:
 
 ```sh
 ./build.zsh /Applications/GeForceNOW.app \
   "$HOME/Applications/GeForceNOW-Steam-Controller.app"
 ```
 
-## What the builder does
+Running `build.zsh` without arguments writes to
+`~/Applications/GeForceNOW-Steam-Controller.app`. This developer-oriented path
+is not used by `install.zsh`.
+
+## What the installer and builder do
 
 1. Copies the official GFN app to a staging directory.
 2. Extracts the arm64 slice of `libGeronimo.dylib`.
@@ -96,8 +102,11 @@ Custom source and output paths are positional arguments:
 9. Sets the Finder display name to `GeForceNOW-Steam-Controller` in the main
    and localized bundle metadata.
 10. Ad-hoc signs the staged app and runs strict deep signature verification.
-11. Installs the verified copy and preserves any previous build as a
-    timestamped backup.
+11. The installer resets a safe-to-stop resident GFN container, replaces only
+    `/Applications/GeForceNOW-Steam-Controller.app`, and verifies the installed
+    copy.
+12. If replacement or final verification fails, the installer restores the
+    previously installed patched copy.
 
 The official app is never patched in place. The builder has no network access
 and downloads nothing.
@@ -159,13 +168,14 @@ conflict.
 ## Updating GeForce NOW
 
 1. Update the official app normally.
-2. Quit the patched copy.
-3. Run `./build.zsh` again.
-4. Run `./verify.zsh`.
-5. Open `~/Applications/GeForceNOW-Steam-Controller.app` normally.
-6. Test the GFN interface and one streamed game.
+2. Quit every GeForce NOW window.
+3. Run `./install.zsh` again.
+4. Open `/Applications/GeForceNOW-Steam-Controller.app` normally.
+5. Test the GFN interface and one streamed game.
 
-The old patched copy is retained as
+The installer temporarily preserves the previous patched copy and removes that
+backup only after the newly installed copy passes verification. Direct custom
+builds made with `build.zsh` retain their previous output as
 `GeForceNOW-Steam-Controller.app.previous-YYYYMMDD-HHMMSS`.
 
 If NVIDIA changes `_GCDeviceInit`, the builder stops on `unexpected
@@ -191,15 +201,25 @@ function before updating the signature.
 
 ## Uninstall
 
-Quit and remove `~/Applications/GeForceNOW-Steam-Controller.app` and any timestamped
-backups. No system service, driver, daemon, or privileged helper is installed.
+Quit every GeForce NOW window, then run:
+
+```sh
+./uninstall.zsh
+```
+
+The script removes only
+`/Applications/GeForceNOW-Steam-Controller.app`. It does not remove or modify
+the official GFN app, Steam configuration, shared GFN user data, permissions,
+drivers, services, or daemons.
 
 ## Development
 
 ```sh
-make check       # syntax check, compile with warnings as errors, unit tests
-make build-app   # build the local patched GFN copy
-make verify-app  # verify the installed copy
+make check         # syntax check, compile with warnings as errors, unit tests
+make install-app   # build, verify, and install into /Applications
+make uninstall-app # remove only the installed patched copy
+make build-app     # low-level build into the user Applications folder
+make verify-app    # verify the system-installed patched copy
 make clean
 ```
 

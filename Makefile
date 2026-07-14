@@ -6,7 +6,7 @@ HAPTIC_PATCHER := $(BUILD_DIR)/patch_haptics
 HAPTIC_BRIDGE := $(BUILD_DIR)/libGFNSteamHIDHaptics.dylib
 HAPTIC_TEST := $(BUILD_DIR)/test_haptic_bridge
 
-.PHONY: all check test syntax build-app verify-app clean
+.PHONY: all check test syntax install-app uninstall-app build-app verify-app clean
 
 all: check
 
@@ -29,17 +29,25 @@ $(HAPTIC_TEST): haptic_bridge.c haptic_bridge.h tests/test_haptic_bridge.c
 		-framework IOKit -framework CoreFoundation -pthread -o $@
 
 syntax:
-	zsh -n build.zsh verify.zsh reset-gfn-container.zsh \
+	zsh -n build.zsh verify.zsh install.zsh uninstall.zsh \
+		reset-gfn-container.zsh \
 		tests/test_patcher.zsh tests/test_haptic_patcher.zsh \
-		tests/test_reset_container.zsh
+		tests/test_reset_container.zsh tests/test_installers.zsh
 
 test: $(PATCHER) $(HAPTIC_PATCHER) $(HAPTIC_BRIDGE) $(HAPTIC_TEST)
 	zsh tests/test_patcher.zsh $(PATCHER)
 	zsh tests/test_haptic_patcher.zsh $(HAPTIC_PATCHER)
 	$(HAPTIC_TEST)
 	zsh tests/test_reset_container.zsh ./reset-gfn-container.zsh
+	zsh tests/test_installers.zsh ./install.zsh ./uninstall.zsh
 
 check: syntax test
+
+install-app:
+	./install.zsh
+
+uninstall-app:
+	./uninstall.zsh
 
 build-app:
 	./build.zsh

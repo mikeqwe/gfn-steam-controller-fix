@@ -10,6 +10,8 @@ All notable changes to this project will be documented in this file.
 - a local HID bridge for physical Steam Controller vibration;
 - unit tests for rumble mapping, report encoding, haptic patching, and reset
   utility argument validation;
+- installer and uninstaller scripts for the standard system Applications
+  folder, including installed-build verification and rollback;
 - an opt-in troubleshooting utility that resets resident
   `GeForceNOWContainer` collisions without becoming the normal app launcher.
 
@@ -19,6 +21,9 @@ All notable changes to this project will be documented in this file.
   Finder display name, and deep app signature;
 - the default bundle and Finder display name is now
   `GeForceNOW-Steam-Controller`;
+- the normal installation path is now
+  `/Applications/GeForceNOW-Steam-Controller.app`, so the patched copy appears
+  in Finder's standard Applications folder;
 - documentation now covers Input Monitoring, verified vibration, and GFN's
   mandatory BackgroundAgent timeout.
 

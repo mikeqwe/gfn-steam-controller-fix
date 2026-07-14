@@ -2,10 +2,12 @@
 set -euo pipefail
 
 SCRIPT_DIR="${0:A:h}"
-APP="${1:-$HOME/Applications/GeForceNOW-Steam-Controller.app}"
+APP="${1:-/Applications/GeForceNOW-Steam-Controller.app}"
 
 if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
     print "Usage: ${0:t} [patched-app]"
+    print
+    print "Default patched-app: /Applications/GeForceNOW-Steam-Controller.app"
     exit 0
 fi
 
