@@ -1,7 +1,9 @@
-# GeForce NOW Steam Controller fix for macOS
+# Steam Controller (2026) gamepad fix for GeForce NOW on macOS
 
-Build a separate, locally signed GeForce NOW app that accepts Steam's virtual
-Xbox gamepad through GFN's HID backend.
+If your Steam Controller works as mouse and keyboard input or in the GeForce NOW
+menu but is not detected as a gamepad inside streamed games on macOS, this
+project builds a separate, locally signed GFN app that routes Steam Input's
+virtual Xbox controller through GFN's HID backend.
 
 The fix was validated end to end on an Apple Silicon Mac: controller input works
 in the GeForce NOW interface and inside streamed games, with vibration during
@@ -44,6 +46,33 @@ opens the same Steam virtual controller through its HID backend as `045e:028e`
 and forwards it as a standard gamepad.
 
 See [Technical notes](docs/technical-notes.md) for the evidence and data flow.
+
+## Common symptoms and questions
+
+### GFN menu works, but streamed games do not
+
+This is one form of the verified failure. Desktop mouse and keyboard bindings
+can still control the GFN interface even when the virtual gamepad is not being
+forwarded to the streamed game. The patched copy routes that gamepad through
+GFN's HID backend instead.
+
+### The controller only acts as a mouse and keyboard
+
+First choose a Steam layout that emits gamepad controls. This project fixes the
+GFN side of the path; it cannot create gamepad reports when the active Steam
+layout only emits desktop input.
+
+### Steam Input's virtual gamepad is not detected
+
+The tested virtual device appears as Xbox-compatible HID `045e:028e`. The
+builder addresses the case where Steam creates that device successfully but
+the native GFN client does not forward its reports as usable gamepad input.
+
+### Does this require disabling System Integrity Protection?
+
+No. SIP can remain enabled. The project patches and ad-hoc signs a separate
+copy of GFN in user space; it does not install a kernel extension or DriverKit
+driver.
 
 ## Requirements
 

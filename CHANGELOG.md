@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Changed
+
+- the README now leads with the affected Steam Controller (2026) symptoms and
+  answers common gamepad-routing questions.
+
 ## [0.2.0] - 2026-07-14
 
 ### Added
