@@ -28,6 +28,10 @@ All notable changes to this project will be documented in this file.
   in Finder's standard Applications folder;
 - documentation now covers Input Monitoring, verified vibration, and GFN's
   mandatory BackgroundAgent timeout;
+- documentation now states the possible GeForce NOW Terms of Use and account
+  risks of running a modified client;
+- CI now pins third-party Actions to immutable commits and receives automated
+  GitHub Actions dependency update proposals;
 - the security policy now constrains elevated installation operations to the
   fixed patched-app target.
 

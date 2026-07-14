@@ -13,6 +13,12 @@ firmware, and macOS system security settings are not modified.
 > product. It patches a local copy of proprietary software. Review the code and
 > the limitations below before using it.
 
+> [!WARNING]
+> Using a modified GeForce NOW client may violate the
+> [GeForce NOW Terms of Use](https://www.nvidia.com/en-us/geforce-now/terms-of-use/)
+> and may result in suspension or termination of the user's GFN account. Users
+> are responsible for evaluating the terms and laws that apply to them.
+
 ## Tested configuration
 
 - GeForce NOW `2.0.86.124`
