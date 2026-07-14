@@ -33,6 +33,10 @@ for required_script in build.zsh verify.zsh reset-gfn-container.zsh; do
         exit 1
     fi
 done
+if [[ ! -r "$SCRIPT_DIR/lib/app-transaction.zsh" ]]; then
+    print -u2 "Required library not found: $SCRIPT_DIR/lib/app-transaction.zsh"
+    exit 1
+fi
 
 for required_command in cat mktemp mv rm; do
     if ! command -v "$required_command" >/dev/null; then
@@ -93,42 +97,10 @@ run_admin() {
     fi
 }
 
-backup_app=""
-restore_previous_app() {
-    if [[ -n "$backup_app" && -e "$backup_app" ]]; then
-        run_admin mv "$backup_app" "$TARGET_APP"
-        print -u2 "The previous installed copy was restored."
-    fi
-}
-
-if [[ -e "$TARGET_APP" ]]; then
-    backup_app="${TARGET_APP}.install-backup-$$"
-    if [[ -e "$backup_app" ]]; then
-        print -u2 "Temporary backup path already exists: $backup_app"
-        exit 1
-    fi
-    run_admin mv "$TARGET_APP" "$backup_app"
-fi
-
-if ! run_admin mv "$staged_app" "$TARGET_APP"; then
-    restore_previous_app
-    print -u2 "Installation failed."
-    exit 1
-fi
-
+source "$SCRIPT_DIR/lib/app-transaction.zsh"
 print "Verifying the installed app..."
-if ! run_with_log "Installed verification" \
-    "$work_dir/installed-verification.log" \
-    "$SCRIPT_DIR/verify.zsh" "$TARGET_APP"; then
-    run_admin rm -rf -- "$TARGET_APP"
-    restore_previous_app
-    print -u2 "Installed verification failed."
-    exit 1
-fi
-
-if [[ -n "$backup_app" && -e "$backup_app" ]]; then
-    run_admin rm -rf -- "$backup_app"
-fi
+replace_verified_app "$staged_app" "$TARGET_APP" \
+    "$SCRIPT_DIR/verify.zsh" "$work_dir/installed-verification.log"
 
 print
 print "Installed and verified:"

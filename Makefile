@@ -30,9 +30,10 @@ $(HAPTIC_TEST): haptic_bridge.c haptic_bridge.h tests/test_haptic_bridge.c
 
 syntax:
 	zsh -n build.zsh verify.zsh install.zsh uninstall.zsh \
-		reset-gfn-container.zsh \
+		reset-gfn-container.zsh lib/app-transaction.zsh \
 		tests/test_patcher.zsh tests/test_haptic_patcher.zsh \
-		tests/test_reset_container.zsh tests/test_installers.zsh
+		tests/test_reset_container.zsh tests/test_installers.zsh \
+		tests/test_app_transaction.zsh
 
 test: $(PATCHER) $(HAPTIC_PATCHER) $(HAPTIC_BRIDGE) $(HAPTIC_TEST)
 	zsh tests/test_patcher.zsh $(PATCHER)
@@ -40,6 +41,7 @@ test: $(PATCHER) $(HAPTIC_PATCHER) $(HAPTIC_BRIDGE) $(HAPTIC_TEST)
 	$(HAPTIC_TEST)
 	zsh tests/test_reset_container.zsh ./reset-gfn-container.zsh
 	zsh tests/test_installers.zsh ./install.zsh ./uninstall.zsh
+	zsh tests/test_app_transaction.zsh ./lib/app-transaction.zsh
 
 check: syntax test
 

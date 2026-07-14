@@ -12,6 +12,8 @@ All notable changes to this project will be documented in this file.
   utility argument validation;
 - installer and uninstaller scripts for the standard system Applications
   folder, including installed-build verification and rollback;
+- isolated transaction tests for successful replacement, verifier-triggered
+  rollback, and idempotent removal;
 - an opt-in troubleshooting utility that resets resident
   `GeForceNOWContainer` collisions without becoming the normal app launcher.
 
@@ -25,7 +27,9 @@ All notable changes to this project will be documented in this file.
   `/Applications/GeForceNOW-Steam-Controller.app`, so the patched copy appears
   in Finder's standard Applications folder;
 - documentation now covers Input Monitoring, verified vibration, and GFN's
-  mandatory BackgroundAgent timeout.
+  mandatory BackgroundAgent timeout;
+- the security policy now constrains elevated installation operations to the
+  fixed patched-app target.
 
 ## [0.1.0] - 2026-07-14
 

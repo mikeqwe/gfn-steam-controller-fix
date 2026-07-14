@@ -18,6 +18,17 @@ impact, and whether the issue can modify the official GFN installation.
 
 ## Design boundaries
 
-The builder must remain unprivileged, offline, fail-closed on unknown machine
-instructions, and restricted to a staged copy of GFN. Changes that weaken any of
-those properties require explicit security justification and tests.
+The builder and verifier must remain unprivileged, offline, fail-closed on
+unknown machine instructions, and restricted to a staged or separately
+installed copy of GFN.
+
+The installer and uninstaller may elevate only the fixed filesystem operations
+needed to replace or remove
+`/Applications/GeForceNOW-Steam-Controller.app`. They must not accept an
+arbitrary privileged target. The installer must build and verify its candidate
+before elevation, must verify the installed copy, and must restore the previous
+patched copy if final verification fails. The official GFN app remains a
+read-only source.
+
+Changes that weaken any of these properties require explicit security
+justification and tests.

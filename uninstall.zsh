@@ -30,6 +30,10 @@ if [[ ! -x "$SCRIPT_DIR/reset-gfn-container.zsh" ]]; then
     print -u2 "Required executable script not found: $SCRIPT_DIR/reset-gfn-container.zsh"
     exit 1
 fi
+if [[ ! -r "$SCRIPT_DIR/lib/app-transaction.zsh" ]]; then
+    print -u2 "Required library not found: $SCRIPT_DIR/lib/app-transaction.zsh"
+    exit 1
+fi
 
 # Refuse to remove a running app and clear only the same-user resident
 # container that may still have libraries loaded from the installed copy.
@@ -46,16 +50,16 @@ if [[ ! -w "$TARGET_PARENT" ]]; then
     use_sudo=true
 fi
 
-if [[ "$use_sudo" == true ]]; then
-    sudo rm -rf -- "$TARGET_APP"
-else
-    rm -rf -- "$TARGET_APP"
-fi
+run_admin() {
+    if [[ "$use_sudo" == true ]]; then
+        sudo "$@"
+    else
+        "$@"
+    fi
+}
 
-if [[ -e "$TARGET_APP" ]]; then
-    print -u2 "Uninstall failed: $TARGET_APP still exists."
-    exit 1
-fi
+source "$SCRIPT_DIR/lib/app-transaction.zsh"
+remove_installed_app "$TARGET_APP"
 
 print "Removed:"
 print "  $TARGET_APP"
