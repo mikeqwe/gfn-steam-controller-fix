@@ -1,0 +1,8 @@
+.DS_Store
+.build/
+*.app
+*.app.previous-*
+*.dylib
+*.o
+*.log
+*.tmp
