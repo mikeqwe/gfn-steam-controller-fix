@@ -55,6 +55,12 @@ body:
       required: true
 
   - type: textarea
+    id: haptics
+    attributes:
+      label: Haptics result
+      description: State whether vibration was tested, worked, or was not applicable.
+
+  - type: textarea
     id: command-output
     attributes:
       label: Sanitized build or verify output

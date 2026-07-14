@@ -33,6 +33,7 @@ controller-path finding.
 
 ## Scope
 
-The repository currently targets Apple Silicon and Steam's virtual Xbox HID.
-Intel support, per-device GameController filtering, and haptics are welcome only
+The repository currently targets Apple Silicon, Steam's virtual Xbox HID, and
+physical Steam Controller rumble. Intel support, per-device GameController
+filtering, additional controllers, and trigger-specific haptics are welcome only
 with reproducible tests and explicit limitations.

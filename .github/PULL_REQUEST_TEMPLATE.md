@@ -10,6 +10,7 @@ Describe the compatibility problem and the smallest change that addresses it.
 - virtual controller VID:PID:
 - GFN interface result:
 - streamed-game result:
+- vibration result (if applicable):
 
 ## Safety checklist
 

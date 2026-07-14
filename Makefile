@@ -2,6 +2,9 @@ CC ?= cc
 CFLAGS ?= -std=c11 -Wall -Wextra -Werror -O2
 BUILD_DIR := .build
 PATCHER := $(BUILD_DIR)/patch_gc_backend
+HAPTIC_PATCHER := $(BUILD_DIR)/patch_haptics
+HAPTIC_BRIDGE := $(BUILD_DIR)/libGFNSteamHIDHaptics.dylib
+HAPTIC_TEST := $(BUILD_DIR)/test_haptic_bridge
 
 .PHONY: all check test syntax build-app verify-app clean
 
@@ -11,11 +14,30 @@ $(PATCHER): patch_gc_backend.c
 	mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) $< -o $@
 
-syntax:
-	zsh -n build.zsh verify.zsh tests/test_patcher.zsh
+$(HAPTIC_PATCHER): patch_haptics.c
+	mkdir -p $(BUILD_DIR)
+	$(CC) $(CFLAGS) $< -o $@
 
-test: $(PATCHER)
+$(HAPTIC_BRIDGE): haptic_bridge.c haptic_bridge.h
+	mkdir -p $(BUILD_DIR)
+	$(CC) $(CFLAGS) -arch arm64 -dynamiclib haptic_bridge.c \
+		-framework IOKit -framework CoreFoundation -pthread -o $@
+
+$(HAPTIC_TEST): haptic_bridge.c haptic_bridge.h tests/test_haptic_bridge.c
+	mkdir -p $(BUILD_DIR)
+	$(CC) $(CFLAGS) haptic_bridge.c tests/test_haptic_bridge.c \
+		-framework IOKit -framework CoreFoundation -pthread -o $@
+
+syntax:
+	zsh -n build.zsh verify.zsh reset-gfn-container.zsh \
+		tests/test_patcher.zsh tests/test_haptic_patcher.zsh \
+		tests/test_reset_container.zsh
+
+test: $(PATCHER) $(HAPTIC_PATCHER) $(HAPTIC_BRIDGE) $(HAPTIC_TEST)
 	zsh tests/test_patcher.zsh $(PATCHER)
+	zsh tests/test_haptic_patcher.zsh $(HAPTIC_PATCHER)
+	$(HAPTIC_TEST)
+	zsh tests/test_reset_container.zsh ./reset-gfn-container.zsh
 
 check: syntax test
 

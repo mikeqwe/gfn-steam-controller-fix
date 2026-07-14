@@ -79,6 +79,46 @@ The builder resolves the function address dynamically, translates the Mach-O
 virtual address to a file offset, and refuses any binary whose original bytes do
 not match. This is intentionally narrower than searching for a byte sequence.
 
+## Haptic bridge
+
+GFN's HID backend did not advertise force feedback for Steam's virtual
+`045e:028e` device, even though the streamed session delivered rumble commands.
+The arm64 patch therefore makes `_Forge_isRumbleSupported` return true and
+replaces `_Forge_setRumbleState` with a bounded stub that resolves
+`HIDSetRumbleTypeSine` through `dlsym`.
+
+The replacement `libGeronimo.dylib` exports that bridge and re-exports the
+patched original as `libGeronimo.original.dylib`. The bridge runs only in the
+main `GeForceNOW` process, opens physical Steam Controller interfaces matching
+`28de:1304`, maps GFN's 0-30 motor levels to 16-bit amplitudes, and sends this
+ten-byte output report:
+
+```text
+80 00 00 00 LL LL 00 HH HH 00
+```
+
+Active reports are refreshed every 40 ms until GFN's requested duration ends;
+a zero-amplitude report then stops both motors. Unit tests cover amplitude
+mapping, report encoding, the arm64 stub, idempotence, and rejection of unknown
+function bytes. On the tested machine, vibration was directly felt during a
+streamed game.
+
+## Resident BackgroundAgent collision
+
+GFN intentionally keeps `GeForceNOWContainer` alive after the main window
+closes. When a container from another GFN app copy owns
+`ReliabilityMonitor/inst.lck` and the local message-bus port, the new copy's
+mandatory `GfnBackgroundAgent` fails initialization. The UI reports
+`backgroundagent: TimedOut` after 60 seconds and displays the generic **Problem
+Detected** dialog even while streaming continues.
+
+`reset-gfn-container.zsh` is a narrowly scoped troubleshooting utility for this
+cross-copy collision. It will not terminate an active GFN window or streamer,
+does not launch an app, and verifies that no container or reliability-lock
+holder remains. After the reset, the user opens the desired app normally. The
+behavior was verified live: the failing state changed from `TimedOut` to
+`Success`, and the new container reached both `Initialized` and `Started`.
+
 ## Known side effects and future direction
 
 The current workaround disables the GameController backend globally inside the
@@ -87,5 +127,5 @@ Steam's virtual `045e:028e` device from `GCHandlesDevice()` while preventing
 duplicate registration. Such a change needs testing with Xbox, DualSense, and
 other controllers before it can replace the current known-working patch.
 
-Haptics remain outside the verified scope. The HID path reported no force-
-feedback reference on the tested virtual device.
+The haptic bridge currently handles only controller ID 0 and the two main rumble
+channels. Trigger-specific haptics are accepted by the ABI but ignored.
