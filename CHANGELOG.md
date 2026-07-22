@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-07-22
+
 ### Changed
 
 - add exact haptic-function signatures for GeForce NOW `2.0.87.130` while
