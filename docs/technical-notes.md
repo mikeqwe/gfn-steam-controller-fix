@@ -103,6 +103,19 @@ mapping, report encoding, the arm64 stub, idempotence, and rejection of unknown
 function bytes. On the tested machine, vibration was directly felt during a
 streamed game.
 
+GFN `2.0.87.130` moved the relevant code and changed the relocation-dependent
+`adrp` and `bl` encodings in both 64-byte haptic functions. Their control flow
+and symbol layout remained the same. The patcher accepts the newly inspected
+64-byte pair as a separate exact signature; it does not mask those changing
+instructions or accept arbitrary function bodies.
+
+Re-signing the updated app can invalidate its previous Input Monitoring
+approval. In that state gamepad input still works, GFN still dispatches rumble,
+but `IOHIDManagerOpen` cannot open the physical controller. The bridge checks
+`kIOHIDRequestTypeListenEvent` and requests access once when needed. The user
+must grant Input Monitoring and relaunch the patched app before vibration can
+resume.
+
 ## Resident BackgroundAgent collision
 
 GFN intentionally keeps `GeForceNOWContainer` alive after the main window

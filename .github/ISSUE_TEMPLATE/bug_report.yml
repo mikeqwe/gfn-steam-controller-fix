@@ -14,7 +14,7 @@ body:
     id: gfn-version
     attributes:
       label: GeForce NOW version
-      placeholder: 2.0.86.124
+      placeholder: 2.0.87.130
     validations:
       required: true
 

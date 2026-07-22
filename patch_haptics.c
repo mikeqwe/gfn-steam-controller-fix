@@ -15,7 +15,7 @@ enum mode {
     MODE_CHECK,
 };
 
-static const uint8_t original_is_rumble_supported[FUNCTION_SIZE] = {
+static const uint8_t original_is_rumble_supported_2_0_86_124[FUNCTION_SIZE] = {
     0xfd, 0x7b, 0xbf, 0xa9, 0xfd, 0x03, 0x00, 0x91,
     0xc8, 0x76, 0x00, 0xb0, 0x08, 0x01, 0x31, 0x91,
     0x09, 0x24, 0x80, 0x52, 0x08, 0x20, 0x29, 0x9b,
@@ -26,7 +26,7 @@ static const uint8_t original_is_rumble_supported[FUNCTION_SIZE] = {
     0xfd, 0x7b, 0xc1, 0xa8, 0xc0, 0x03, 0x5f, 0xd6,
 };
 
-static const uint8_t original_set_rumble_state[FUNCTION_SIZE] = {
+static const uint8_t original_set_rumble_state_2_0_86_124[FUNCTION_SIZE] = {
     0xfd, 0x7b, 0xbf, 0xa9, 0xfd, 0x03, 0x00, 0x91,
     0xc8, 0x76, 0x00, 0xb0, 0x08, 0x01, 0x31, 0x91,
     0x09, 0x24, 0x80, 0x52, 0x08, 0x20, 0x29, 0x9b,
@@ -36,6 +36,53 @@ static const uint8_t original_set_rumble_state[FUNCTION_SIZE] = {
     0xc0, 0x03, 0x5f, 0xd6, 0x00, 0x00, 0x80, 0x52,
     0xfd, 0x7b, 0xc1, 0xa8, 0xc0, 0x03, 0x5f, 0xd6,
 };
+
+static const uint8_t original_is_rumble_supported_2_0_87_130[FUNCTION_SIZE] = {
+    0xfd, 0x7b, 0xbf, 0xa9, 0xfd, 0x03, 0x00, 0x91,
+    0xc8, 0x76, 0x00, 0xd0, 0x08, 0x01, 0x31, 0x91,
+    0x09, 0x24, 0x80, 0x52, 0x08, 0x20, 0x29, 0x9b,
+    0x08, 0xc1, 0x40, 0x39, 0xc8, 0x00, 0x00, 0x34,
+    0x8f, 0x1d, 0x00, 0x94, 0x1f, 0x00, 0x00, 0x71,
+    0xe0, 0x07, 0x9f, 0x1a, 0xfd, 0x7b, 0xc1, 0xa8,
+    0xc0, 0x03, 0x5f, 0xd6, 0x00, 0x00, 0x80, 0x52,
+    0xfd, 0x7b, 0xc1, 0xa8, 0xc0, 0x03, 0x5f, 0xd6,
+};
+
+static const uint8_t original_set_rumble_state_2_0_87_130[FUNCTION_SIZE] = {
+    0xfd, 0x7b, 0xbf, 0xa9, 0xfd, 0x03, 0x00, 0x91,
+    0xc8, 0x76, 0x00, 0xd0, 0x08, 0x01, 0x31, 0x91,
+    0x09, 0x24, 0x80, 0x52, 0x08, 0x20, 0x29, 0x9b,
+    0x08, 0xc1, 0x40, 0x39, 0xc8, 0x00, 0x00, 0x34,
+    0x45, 0x1d, 0x00, 0x94, 0x1f, 0x00, 0x00, 0x71,
+    0xe0, 0x07, 0x9f, 0x1a, 0xfd, 0x7b, 0xc1, 0xa8,
+    0xc0, 0x03, 0x5f, 0xd6, 0x00, 0x00, 0x80, 0x52,
+    0xfd, 0x7b, 0xc1, 0xa8, 0xc0, 0x03, 0x5f, 0xd6,
+};
+
+struct original_haptic_pair {
+    const uint8_t *is_rumble_supported;
+    const uint8_t *set_rumble_state;
+};
+
+static bool matches_supported_original(
+    const uint8_t actual_is[FUNCTION_SIZE],
+    const uint8_t actual_set[FUNCTION_SIZE]) {
+    static const struct original_haptic_pair supported[] = {
+        {original_is_rumble_supported_2_0_86_124,
+         original_set_rumble_state_2_0_86_124},
+        {original_is_rumble_supported_2_0_87_130,
+         original_set_rumble_state_2_0_87_130},
+    };
+    for (size_t i = 0; i < sizeof(supported) / sizeof(supported[0]); ++i) {
+        if (memcmp(actual_is, supported[i].is_rumble_supported,
+                   FUNCTION_SIZE) == 0 &&
+            memcmp(actual_set, supported[i].set_rumble_state,
+                   FUNCTION_SIZE) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
 
 static bool parse_u64(const char *value, uint64_t *result) {
     char *end = NULL;
@@ -163,7 +210,8 @@ int main(int argc, char **argv) {
     }
 
     uint8_t patched_is[FUNCTION_SIZE];
-    memcpy(patched_is, original_is_rumble_supported, sizeof(patched_is));
+    memcpy(patched_is, original_is_rumble_supported_2_0_86_124,
+           sizeof(patched_is));
     static const uint8_t return_true[] = {
         0x20, 0x00, 0x80, 0x52, /* mov w0, #1 */
         0xc0, 0x03, 0x5f, 0xd6, /* ret */
@@ -198,15 +246,14 @@ int main(int argc, char **argv) {
         fclose(file);
         return 0;
     }
-    if (mode == MODE_CHECK &&
-        memcmp(actual_is, original_is_rumble_supported, FUNCTION_SIZE) == 0 &&
-        memcmp(actual_set, original_set_rumble_state, FUNCTION_SIZE) == 0) {
+    bool is_supported_original =
+        matches_supported_original(actual_is, actual_set);
+    if (mode == MODE_CHECK && is_supported_original) {
         fputs("haptic bridge is not patched\n", stderr);
         fclose(file);
         return 3;
     }
-    if (memcmp(actual_is, original_is_rumble_supported, FUNCTION_SIZE) != 0 ||
-        memcmp(actual_set, original_set_rumble_state, FUNCTION_SIZE) != 0) {
+    if (!is_supported_original) {
         fputs("refusing haptic patch: unexpected function bytes\n", stderr);
         fclose(file);
         return 1;
