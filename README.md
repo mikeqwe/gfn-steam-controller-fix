@@ -23,7 +23,7 @@ firmware, and macOS system security settings are not modified.
 
 ## Tested configuration
 
-- GeForce NOW `2.0.86.124`
+- GeForce NOW `2.0.87.130`
 - macOS `26.5.2` on Apple Silicon
 - Steam Controller hardware `28de:1304`
 - Steam virtual `GamePad-1` HID `045e:028e`
@@ -31,8 +31,9 @@ firmware, and macOS system security settings are not modified.
 - streamed-game input: working
 - vibration during streamed gameplay: working
 
-Other GFN versions may work only when their `_GCDeviceInit` prologue matches the
-verified instruction signature. The builder fails closed when it does not.
+GFN `2.0.86.124` remains covered by the exact instruction signatures. Other
+versions may work only when their input and haptic functions match a verified
+signature. The builder fails closed when they do not.
 
 ## Why this is needed
 
@@ -86,6 +87,9 @@ placed in the system `/Applications` folder.
 
 macOS may ask for **Input Monitoring** when the haptic bridge first opens the
 physical Steam Controller. Grant access to the patched GFN copy and relaunch it.
+The bridge explicitly requests this permission when its code signature changes;
+without it, controller input still works but vibration cannot reach the physical
+device.
 
 CMake, a kernel extension, a DriverKit driver, a root shell, and disabling SIP
 are not required. The installer does not add a privileged helper or background
@@ -174,6 +178,29 @@ The log is normally located at:
 ```text
 ~/Library/Application Support/NVIDIA/GeForceNOW/geronimo.log
 ```
+
+## Troubleshooting: input works, but vibration does not
+
+A newly built ad-hoc signature can invalidate the previous Input Monitoring
+approval. Gamepad input then continues to work, but the haptic bridge cannot
+open the physical Steam Controller.
+
+If reopening the patched app does not present a new permission request:
+
+1. Quit every GeForce NOW window.
+2. Reset only GFN's Input Monitoring decision:
+
+```sh
+tccutil reset ListenEvent com.nvidia.gfnpc.mall
+```
+
+3. Open `GeForceNOW-Steam-Controller` again.
+4. Enable it in **System Settings → Privacy & Security → Input Monitoring**.
+5. Quit and reopen the patched app once more, then retest vibration.
+
+This command does not reset GFN microphone, camera, Accessibility, or other
+privacy permissions. The official and patched copies use the same NVIDIA bundle
+identifier, so the Input Monitoring decision is shared between them.
 
 ## Troubleshooting: "Problem Detected" after launch
 

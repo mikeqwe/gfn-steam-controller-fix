@@ -5,6 +5,7 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <IOKit/hid/IOHIDKeys.h>
 #include <IOKit/hid/IOHIDManager.h>
+#include <IOKit/hidsystem/IOHIDLib.h>
 #include <mach-o/dyld.h>
 #include <limits.h>
 #include <pthread.h>
@@ -36,6 +37,8 @@ struct bridge_devices {
     IOHIDDeviceRef devices[MAX_HID_INTERFACES];
     size_t count;
 };
+
+static bool access_request_attempted;
 
 static struct bridge_state state = {
     .lock = PTHREAD_MUTEX_INITIALIZER,
@@ -97,8 +100,26 @@ static void close_devices(struct bridge_devices *devices) {
     }
 }
 
+static bool ensure_input_monitoring_access(void) {
+    IOHIDAccessType access =
+        IOHIDCheckAccess(kIOHIDRequestTypeListenEvent);
+    if (access == kIOHIDAccessTypeGranted) {
+        return true;
+    }
+    if (!access_request_attempted) {
+        access_request_attempted = true;
+        (void)IOHIDRequestAccess(kIOHIDRequestTypeListenEvent);
+    }
+    return IOHIDCheckAccess(kIOHIDRequestTypeListenEvent) ==
+           kIOHIDAccessTypeGranted;
+}
+
 static bool open_devices(struct bridge_devices *devices) {
     close_devices(devices);
+
+    if (!ensure_input_monitoring_access()) {
+        return false;
+    }
 
     devices->manager = IOHIDManagerCreate(kCFAllocatorDefault, kIOHIDOptionsTypeNone);
     if (devices->manager == NULL) {
@@ -291,6 +312,8 @@ __attribute__((constructor)) static void install_haptic_bridge(void) {
     if (!is_main_geforce_now_process()) {
         return;
     }
+
+    (void)ensure_input_monitoring_access();
 
     pthread_t worker;
     if (pthread_create(&worker, NULL, rumble_worker, NULL) != 0) {

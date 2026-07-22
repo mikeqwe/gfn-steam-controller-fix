@@ -6,6 +6,13 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- add exact haptic-function signatures for GeForce NOW `2.0.87.130` while
+  retaining fail-closed rejection of unknown binaries;
+- explicitly request Input Monitoring when an updated ad-hoc build no longer
+  has permission to open the physical Steam Controller for vibration;
+- document the app-scoped `tccutil` recovery used when macOS retains a stale
+  Input Monitoring denial after an update;
+- list GeForce NOW `2.0.87.130` as the current tested release;
 - the README now leads with the affected Steam Controller (2026) symptoms and
   answers common gamepad-routing questions.
 
