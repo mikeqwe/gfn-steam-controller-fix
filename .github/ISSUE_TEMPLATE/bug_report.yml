@@ -19,6 +19,15 @@ body:
       required: true
 
   - type: input
+    id: repository-revision
+    attributes:
+      label: Repository revision
+      description: Output of `git rev-parse --short HEAD`, or the release you downloaded.
+      placeholder: e8935b9
+    validations:
+      required: true
+
+  - type: input
     id: macos-version
     attributes:
       label: macOS version and build
@@ -71,7 +80,5 @@ body:
     attributes:
       label: Checks
       options:
-        - label: I ran `make check` on the repository revision used.
-          required: true
         - label: I removed private identifiers and did not attach proprietary binaries.
           required: true
