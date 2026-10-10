@@ -110,48 +110,36 @@ scheduling, the arm64 stub, idempotence, and rejection of unknown function
 bytes. On the tested machine, vibration was directly felt during a streamed
 game.
 
-A runtime trace of GFN `2.0.87.130` observed motor levels from 0 through 231.
-The bridge therefore preserves the full 0-255 input scale instead of saturating
-levels at the previously assumed value of 30.
+A runtime trace of GFN `2.0.87.130` observed motor levels from 0 through 231, so
+the bridge maps the full 0-255 range.
 
-GFN `2.0.87.130` moved the relevant code and changed the relocation-dependent
-`adrp` and `bl` encodings in both 64-byte haptic functions. Their control flow
-and symbol layout remained the same. The patcher accepts the newly inspected
-64-byte pair as a separate exact signature; it does not mask those changing
-instructions or accept arbitrary function bodies.
+From `2.0.86.124` to `2.0.88.129`, only the relocation-dependent `adrp` and `bl`
+instructions changed in the two 64-byte haptic functions; control flow and
+symbol layout stayed the same. The patcher keeps each inspected pair as a
+separate exact signature instead of masking those instructions, and rejects
+mixed or unknown pairs. Add a new pair only after its disassembly shows the same
+control flow.
 
-GFN `2.0.88.129` retained the same haptic symbols, 64-byte function layout,
-control flow, and file offsets (`0xd4bc` and `0xd4fc`). Its data relocation
-moved by one page, changing the `adrp x8` instruction in both functions from
-`c8 76 00 d0` to `08 77 00 d0`. The patcher accepts that inspected pair as a
-third exact signature and continues to reject mixed or otherwise unknown
-function bodies.
+## Updates and Input Monitoring
 
-Re-signing the updated app can invalidate its previous Input Monitoring
-approval. In that state gamepad input still works, GFN still dispatches rumble,
-but `IOHIDManagerOpen` cannot open the physical controller. The bridge checks
-`kIOHIDRequestTypeListenEvent` and registers an access request once when needed.
-On the tested macOS release, `ListenEvent` does not display a normal permission
-prompt: the user must enable GeForce NOW in **System Settings → Privacy &
-Security → Input Monitoring** and relaunch the patched app before vibration can
-resume.
+Re-signing a rebuilt app can invalidate its previous Input Monitoring approval.
+Gamepad input still works and GFN still dispatches rumble, but
+`IOHIDManagerOpen` cannot open the physical controller. The bridge checks
+`kIOHIDRequestTypeListenEvent` and requests access once when needed. On the
+tested macOS release, `ListenEvent` does not display a normal permission
+prompt; the user has to enable GeForce NOW in System Settings and relaunch.
 
-The installer records the existing and staged apps' designated code
-requirements before replacement. If they differ, it runs only
+The installer compares the installed and staged apps' designated code
+requirements. If they differ, it runs only
 `tccutil reset ListenEvent com.nvidia.gfnpc.mall` after the new copy passes
-installed verification. This removes a stale code-requirement decision but
-does not grant access. `repair-input-monitoring.zsh` provides the same narrowly
-scoped reset, launches the patched app so its request is registered, and opens
-the relevant System Settings pane for explicit user approval.
+installed verification. This clears a stale decision but does not grant access;
+`repair-input-monitoring.zsh` runs the same reset on demand.
 
-GFN can self-update the separately installed patched bundle before the official
-bundle is opened again. The updater removes `libGeronimo.original.dylib` and
-restores an ordinary `libGeronimo.dylib`. When that unpatched installed copy is
-newer than the official app, `install.zsh` may use it as a read-only build
-source. An installed copy that still contains the bridge is never selected as
-source. The builder also requires a valid deep signature, GFN's expected bundle
-identifier, and NVIDIA Team ID `6KR3T733EC`; the staged candidate must then pass
-the same instruction and signature verification before replacement.
+GFN can also self-update the patched copy: the updater removes
+`libGeronimo.original.dylib` and restores an ordinary `libGeronimo.dylib`. When
+that copy is newer than the official app, `install.zsh` uses it as the
+read-only build source. A copy that still has `libGeronimo.original.dylib` is
+never used.
 
 ## Resident BackgroundAgent collision
 
@@ -162,11 +150,9 @@ mandatory `GfnBackgroundAgent` fails initialization. The UI reports
 `backgroundagent: TimedOut` after 60 seconds and displays the generic **Problem
 Detected** dialog even while streaming continues.
 
-`reset-gfn-container.zsh` is a narrowly scoped troubleshooting utility for this
-cross-copy collision. It will not terminate an active GFN window or streamer,
-does not launch an app, and verifies that no container or reliability-lock
-holder remains. After the reset, the user opens the desired app normally. The
-behavior was verified live: the failing state changed from `TimedOut` to
+`reset-gfn-container.zsh` stops the user's resident containers when no GFN
+window or streamer is running and checks that no process still holds the lock.
+Verified live: after the reset, the failing state changed from `TimedOut` to
 `Success`, and the new container reached both `Initialized` and `Started`.
 
 ## Known side effects and future direction
@@ -178,4 +164,9 @@ duplicate registration. Such a change needs testing with Xbox, DualSense, and
 other controllers before it can replace the current known-working patch.
 
 The haptic bridge currently handles only controller ID 0 and the two main rumble
-channels. Trigger-specific haptics are accepted by the ABI but ignored.
+channels. Trigger-specific haptics are accepted by the ABI but ignored. Both
+haptic patches apply to every controller: `_Forge_isRumbleSupported` reports
+rumble for all of them, and the replaced `_Forge_setRumbleState` contained the
+only code reference to GFN's stock `_DEV_setRumble` in the inspected
+`2.0.87.131` binary. Other gamepads therefore do not vibrate in the patched
+copy.
