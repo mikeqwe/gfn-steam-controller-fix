@@ -23,7 +23,8 @@ rules out a placeholder-only virtual device.
 
 ## Relevant GFN behavior
 
-The unmodified app initialized its native GameController backend and logged:
+GFN logs to `~/Library/Application Support/NVIDIA/GeForceNOW/geronimo.log`. The
+unmodified app initialized its native GameController backend and logged:
 
 ```text
 Enabled GameController.framework backend
@@ -120,7 +121,30 @@ separate exact signature instead of masking those instructions, and rejects
 mixed or unknown pairs. Add a new pair only after its disassembly shows the same
 control flow.
 
-## Updates and Input Monitoring
+## Build and install
+
+`install.zsh` builds from the official app at `/Applications/GeForceNOW.app`,
+which must have a valid deep signature from NVIDIA team `6KR3T733EC` and GFN's
+bundle identifier. The build copies it to a staging directory, patches the
+arm64 slice of `libGeronimo.dylib` only if every patched function matches an
+exact signature, leaves the x86_64 slice unchanged, adds the bridge, and
+ad-hoc signs and verifies the result. The installer then stops GFN's resident
+background container, refusing to run while a GFN window is open, replaces only
+`/Applications/GeForceNOW-Steam-Controller.app`, verifies the installed copy,
+and restores the previous copy if that fails. It adds no privileged helper or
+background service.
+
+GFN can also self-update the patched copy: the updater removes
+`libGeronimo.original.dylib` and restores an ordinary `libGeronimo.dylib`. When
+that copy is newer than the official app, `install.zsh` uses it as the
+read-only build source. A copy that still has `libGeronimo.original.dylib` is
+never used.
+
+`make check` runs syntax checks and unit tests. `./build.zsh [source-app]
+[output-app]` builds without installing and keeps each previous output as a
+`.previous-*` copy.
+
+## Input Monitoring
 
 Re-signing a rebuilt app can invalidate its previous Input Monitoring approval.
 Gamepad input still works and GFN still dispatches rumble, but
@@ -133,13 +157,8 @@ The installer compares the installed and staged apps' designated code
 requirements. If they differ, it runs only
 `tccutil reset ListenEvent com.nvidia.gfnpc.mall` after the new copy passes
 installed verification. This clears a stale decision but does not grant access;
-`repair-input-monitoring.zsh` runs the same reset on demand.
-
-GFN can also self-update the patched copy: the updater removes
-`libGeronimo.original.dylib` and restores an ordinary `libGeronimo.dylib`. When
-that copy is newer than the official app, `install.zsh` uses it as the
-read-only build source. A copy that still has `libGeronimo.original.dylib` is
-never used.
+`repair-input-monitoring.zsh` runs the same reset on demand. The official and
+patched copies share NVIDIA's bundle identifier, so they share this decision.
 
 ## Resident BackgroundAgent collision
 
