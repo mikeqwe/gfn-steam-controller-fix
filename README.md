@@ -17,9 +17,9 @@ describe the mechanism and evidence.
 > and may result in suspension or termination of your GFN account.
 
 Tested end to end, including vibration, with GFN `2.0.88.129` on macOS `26.5.2`
-(Mac mini M4) and Steam Controller `28de:1304`. GFN `2.0.86.124` and
-`2.0.87.130`/`2.0.87.131` also match the build's instruction signatures; for
-any other version the build stops before anything is installed.
+(Mac mini M4) and Steam Controller `28de:1304`. GFN `2.0.86.124`,
+`2.0.87.130`/`2.0.87.131` and `2.0.89.154` also match the build's instruction
+signatures; for any other version the build stops before anything is installed.
 
 ## Install
 

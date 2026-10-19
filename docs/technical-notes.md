@@ -114,8 +114,8 @@ game.
 A runtime trace of GFN `2.0.87.130` observed motor levels from 0 through 231, so
 the bridge maps the full 0-255 range.
 
-From `2.0.86.124` to `2.0.88.129`, only the relocation-dependent `adrp` and `bl`
-instructions changed in the two 64-byte haptic functions; control flow and
+From `2.0.86.124` to `2.0.89.154`, only the relocation-dependent `adrp`, `add` and
+`bl` instructions changed in the two 64-byte haptic functions; control flow and
 symbol layout stayed the same. The patcher keeps each inspected pair as a
 separate exact signature instead of masking those instructions, and rejects
 mixed or unknown pairs. Add a new pair only after its disassembly shows the same
